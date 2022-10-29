@@ -1,5 +1,6 @@
 import ee
 import json
+import csv
 
 from dataextractor import dataset
 
@@ -10,22 +11,78 @@ from dataextractor import dataset
 # ee.Authenticate()
 # ee.Initialize()
 
-size = dataset.size()
-size_n = size.getInfo()
-print(size_n)
+data_keys = [
+    "id",
+    "date",
+    "point_NDVI",
+    "polygon_NDVI",
+    "background_NDVI"
+]
 
-data_list = dataset.toList(size)
 
-f = open("arborise_export.csv", "w")
-f.write("id,date,NDVI\n")
+def load_csv():
+    f = open("arborise_data.csv", "r")
+    csv_data = {}
+    csv_reader = csv.DictReader(f)
+    line_count = 0
+    for row in csv_reader:
+        if line_count == 0:
+            pass
+        else:
+            csv_data[row["id"]+"-"+row["date"]] = row
+        line_count += 1
+    return csv_data
 
-for i in range(size_n):
-    image = data_list.get(i)
-    info = image.getInfo()
-    prop = info["properties"]
-    print(prop)
 
-    f.write(f"{prop['id']},{prop['date']},{prop['NDVI']}\n")
+def write_csv_param(data_list, param):
 
-f.close()
+    # csv_data = load_csv()
+    csv_data = {}
 
+    f = open("arborise_data.csv", "w")
+    f.write(",".join(data_keys) + "\n")
+
+    for info in data_list:
+        prop = info["properties"]
+        key = str(prop["id"])+"-"+str(prop["date"])
+        if key not in csv_data:
+            csv_data[key] = {
+                "id": prop["id"],
+                "date": prop["date"]
+            }
+        csv_data[key][param] = prop["NDVI"]
+
+    for key in csv_data:
+        row = []
+        for dk in data_keys:
+            if dk in csv_data[key]:
+                row.append(str(csv_data[key][dk]))
+            else:
+                row.append("")
+        f.write(",".join(row)+"\n")
+
+    f.close()
+
+
+def data_extract(ee_dataset):
+
+    res = []
+
+    size = ee_dataset.size()
+    size_n = size.getInfo()
+    print(size_n)
+    data_list = ee_dataset.toList(size)
+
+    for i in range(size_n):
+        image = data_list.get(i)
+        info = image.getInfo()
+        prop = info["properties"]
+        print(prop)
+        res.append(info)
+
+    return res
+
+
+data = data_extract(dataset)
+write_csv_param(data, "polygon_NDVI")
+print(json.dumps(data, indent=4))

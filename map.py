@@ -1,4 +1,10 @@
 import folium
+import ee
+
+ee.Initialize()
+
+from kml.kmldata import KMLData
+
 
 def add_ee_layer(self, ee_image_object, vis_params, name):
     map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
@@ -11,29 +17,40 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
     ).add_to(self)
 
 
+def bind_ndvi(image):
+    band_ndvi = image.normalizedDifference(['B8', 'B4']).rename("NDVI")
+    image = image.addBands(band_ndvi)
+    return image
+
+
+kml = KMLData()
+cnt = kml.get_center()
+lon, lat = cnt
+print(cnt)
+
 folium.Map.add_ee_layer = add_ee_layer
 
-# image = ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_044034_20140318')
-
-visParams_ndvi = {
+vis_params_ndvi = {
+    'bands': ['NDVI'],
     'min': -0.2,
     'max': 0.8,
     'palette': 'FFFFFF, CE7E45, DF923D, F1B555, FCD163, 99B718, 74A901, 66A000, 529400, 3E8601, 207401, 056201, 004C00, 023B01, 012E01, 011D01, 011301'
 }
 
-# Define the visualization parameters.
-image_viz_params = {
-    'bands': ['B4', 'B3', 'B2'],
-    # 'min': 0,
-    # 'max': 0.3
-    # 'gamma': [0.95, 1.1, 1]
-}
+s2 = ee.ImageCollection("COPERNICUS/S2_SR")
+s2 = s2.map(bind_ndvi)
+geometry = ee.Geometry.Point(cnt)
+filtered = s2.filter(ee.Filter.date('2022-01-01', '2022-01-06')).filter(ee.Filter.bounds(geometry))
 
-# Define a map centered on San Francisco Bay.
-map_l8 = folium.Map(location=[37.8719, -122.262], zoom_start=10)
+image = filtered.first()
 
+folium_map = folium.Map(location=[lat, lon], zoom_start=12)
 
-# Add the image layer to the map and display it.
-#map_l8.add_ee_layer(first, image_viz_params, 'false color composite')
-map_l8.add_ee_layer(image_ndvi, visParams_ndvi, 'false color composite')
-map_l8.save('index.html')
+folium_map.add_ee_layer(image, vis_params_ndvi, 'false color composite')
+
+for plot in kml.plots:
+    fgj = folium.GeoJson(data=plot.geojson, style_function=lambda x: {"fillOpacity":0, "color": "black"})
+    fgj.add_to(folium_map)
+    folium.Popup(plot.id).add_to(fgj)
+
+folium_map.save('index.html')
