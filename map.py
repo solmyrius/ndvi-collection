@@ -1,9 +1,7 @@
 import folium
 import ee
-
-ee.Initialize()
-
 from kml.kmldata import KMLData
+from datasource import data_collection
 
 
 def add_ee_layer(self, ee_image_object, vis_params, name):
@@ -17,10 +15,7 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
     ).add_to(self)
 
 
-def bind_ndvi(image):
-    band_ndvi = image.normalizedDifference(['B8', 'B4']).rename("NDVI")
-    image = image.addBands(band_ndvi)
-    return image
+folium.Map.add_ee_layer = add_ee_layer
 
 
 kml = KMLData()
@@ -28,7 +23,8 @@ cnt = kml.get_center()
 lon, lat = cnt
 print(cnt)
 
-folium.Map.add_ee_layer = add_ee_layer
+CLD_PRB_THRESH = 100
+s2 = data_collection('2022-01-10', '2022-01-11', CLD_PRB_THRESH)
 
 vis_params_ndvi = {
     'bands': ['NDVI'],
@@ -37,20 +33,26 @@ vis_params_ndvi = {
     'palette': 'FFFFFF, CE7E45, DF923D, F1B555, FCD163, 99B718, 74A901, 66A000, 529400, 3E8601, 207401, 056201, 004C00, 023B01, 012E01, 011D01, 011301'
 }
 
-s2 = ee.ImageCollection("COPERNICUS/S2_SR")
-s2 = s2.map(bind_ndvi)
-geometry = ee.Geometry.Point(cnt)
-filtered = s2.filter(ee.Filter.date('2022-01-01', '2022-01-06')).filter(ee.Filter.bounds(geometry))
+image = s2.first()
+date = ee.Number.parse(ee.Date(image.date()).format("YYYYMMdd")).getInfo()
+print(date)
 
-image = filtered.first()
+clouds = image.select('clouds').selfMask()
 
-folium_map = folium.Map(location=[lat, lon], zoom_start=12)
+folium_map = folium.Map(
+    location=[lat, lon],
+    # tiles='http://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/MapServer/tile/{z}/{y}/{x}',
+    # attr='ESRI',
+    zoom_start=12
+    )
 
 folium_map.add_ee_layer(image, vis_params_ndvi, 'false color composite')
+folium_map.add_ee_layer(clouds, {'palette': 'e056fd'}, 'clouds')
 
 for plot in kml.plots:
-    fgj = folium.GeoJson(data=plot.geojson, style_function=lambda x: {"fillOpacity":0, "color": "black"})
+    # fgj = folium.GeoJson(data=plot.geojson, style_function=lambda x: {"fillOpacity":0, "color": "black"})
+    fgj = folium.GeoJson(data=plot.geojson_background, style_function=lambda x: {"fillOpacity": 0.1, "color": "red"})
     fgj.add_to(folium_map)
     folium.Popup(plot.id).add_to(fgj)
 
-folium_map.save('index.html')
+folium_map.save(f'index_{CLD_PRB_THRESH}_{date}.html')
