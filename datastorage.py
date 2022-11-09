@@ -17,7 +17,7 @@ class DataStorage:
 
     def _load_csv(self):
         try:
-            f = open("arborise_data.csv", "r")
+            f = open("arborise_data_2.csv", "r")
             csv_reader = csv.DictReader(f)
             line_count = 0
             for row in csv_reader:

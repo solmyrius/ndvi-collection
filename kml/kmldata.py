@@ -8,7 +8,7 @@ class KMLData(KMLSource):
 	def __init__(self):
 		super().__init__()
 		self.ee_fc_polygons = None
-		self.ee_fc_centers = None
+		self.ee_fc_background_polygons = None
 
 	def get_fc_polygons(self):
 		if self.ee_fc_polygons is None:
@@ -18,9 +18,23 @@ class KMLData(KMLSource):
 			for plot in self.plots:
 				ee_poly = ee.Geometry.Polygon(plot.ring)
 				ee_fc_prepared.append(ee.Feature(ee_poly, plot.properties))
+
 			self.ee_fc_polygons = ee.FeatureCollection(ee_fc_prepared)
 
 		return self.ee_fc_polygons
+
+	def get_fc_background_polygons(self):
+		if self.ee_fc_background_polygons is None:
+
+			ee_fc_background_prepared = []
+
+			for plot in self.plots:
+				ee_multi_poly = ee.Geometry.MultiPolygon(plot.background_multipolygon)
+				ee_fc_background_prepared.append(ee.Feature(ee_multi_poly, plot.properties))
+
+			self.ee_fc_background_polygons = ee.FeatureCollection(ee_fc_background_prepared)
+
+		return self.ee_fc_background_polygons
 
 	def get_center(self):
 		fc = self.get_fc_polygons()

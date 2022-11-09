@@ -139,10 +139,14 @@ class KMLPlotSource:
 			"type": "Feature",
 			"geometry": {
 				"type": "MultiPolygon",
-				"coordinates": [[self.ring_background],[self.ring[::-1]]]
+				"coordinates": self.background_multipolygon
 			},
 			"properties": self.properties
 		}
+
+	@property
+	def background_multipolygon(self):
+		return [[self.ring_background], [self.ring[::-1]]]
 
 	def print(self):
 		print(self.id)
