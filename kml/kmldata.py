@@ -25,14 +25,15 @@ class KMLData(KMLSource):
 
 	def get_fc_background_polygons(self):
 		if self.ee_fc_background_polygons is None:
+			ee_fc_prepared = []
+			bg_json = self.get_json_background_v2()
+			for fc in bg_json:
+				ft = fc["features"][0]
+				rings = ft["geometry"]["coordinates"]
+				ee_poly = ee.Geometry.MultiPolygon(rings)
+				ee_fc_prepared.append(ee.Feature(ee_poly, ft["properties"]))
 
-			ee_fc_background_prepared = []
-
-			for plot in self.plots:
-				ee_multi_poly = ee.Geometry.MultiPolygon(plot.background_multipolygon)
-				ee_fc_background_prepared.append(ee.Feature(ee_multi_poly, plot.properties))
-
-			self.ee_fc_background_polygons = ee.FeatureCollection(ee_fc_background_prepared)
+			self.ee_fc_background_polygons = ee.FeatureCollection(ee_fc_prepared)
 
 		return self.ee_fc_background_polygons
 

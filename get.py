@@ -1,27 +1,14 @@
 import json
 import ee
 
-from google.auth.transport.requests import AuthorizedSession
-from google.oauth2 import service_account
-
-KEY = "gc_key/arborise-4044f15d5b0a.json"
-SERVICE_ACCOUNT = "arborise-ee@arborise.iam.gserviceaccount.com"
-PROJECT = 'arborise'
-URL_COMPUTE = 'https://earthengine.googleapis.com/v1beta/projects/{}/table:computeFeatures'
-
-ee_creds = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY)
-ee.Initialize(ee_creds)
-
-credentials = service_account.Credentials.from_service_account_file(KEY)
-scoped_credentials = credentials.with_scopes(
-    ['https://www.googleapis.com/auth/cloud-platform']
-)
-
-session = AuthorizedSession(scoped_credentials)
-
+from ee_config import ee_auth, ee_session_init, PROJECT, DATE_START, DATE_END
 from kml.kmldata import KMLData
 from datasource import data_collection
 from datastorage import DS
+
+ee_auth()
+ee_session = ee_session_init()
+URL_COMPUTE = 'https://earthengine.googleapis.com/v1beta/projects/{}/table:computeFeatures'
 
 
 class DataGetter:
@@ -90,7 +77,7 @@ class DataGetter:
 
             serialized_ndvi = ee.serializer.encode(computation)
 
-            response = session.post(
+            response = ee_session.post(
                 url=URL_COMPUTE.format(PROJECT),
                 data=json.dumps({'expression': serialized_ndvi})
             )
@@ -130,7 +117,7 @@ class DataGetter:
 
             serialized_clouds = ee.serializer.encode(computation)
 
-            response = session.post(
+            response = ee_session.post(
                 url=URL_COMPUTE.format(PROJECT),
                 data=json.dumps({'expression': serialized_clouds})
             )
@@ -156,8 +143,8 @@ class DataGetter:
 
 
 DG = DataGetter(
-    date_start="2022-01-01",
-    date_end="2022-11-09"
+    date_start=DATE_START,
+    date_end=DATE_END
 )
 
 DG.run()

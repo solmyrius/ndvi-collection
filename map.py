@@ -1,7 +1,11 @@
 import folium
 import ee
+from ee_config import ee_auth, CLD_PRB_THRESH, DATE_START, DATE_END
 from kml.kmldata import KMLData
 from datasource import data_collection
+
+
+ee_auth()
 
 
 def add_ee_layer(self, ee_image_object, vis_params, name):
@@ -23,8 +27,7 @@ cnt = kml.get_center()
 lon, lat = cnt
 print(cnt)
 
-CLD_PRB_THRESH = 100
-s2 = data_collection('2022-01-10', '2022-01-11', CLD_PRB_THRESH)
+s2 = data_collection(DATE_START, DATE_END, CLD_PRB_THRESH)
 
 vis_params_ndvi = {
     'bands': ['NDVI'],
@@ -49,10 +52,12 @@ folium_map = folium.Map(
 folium_map.add_ee_layer(image, vis_params_ndvi, 'false color composite')
 folium_map.add_ee_layer(clouds, {'palette': 'e056fd'}, 'clouds')
 
-for plot in kml.plots:
+plots = kml.get_json_background_v2()
+
+for plot in plots:
     # fgj = folium.GeoJson(data=plot.geojson, style_function=lambda x: {"fillOpacity":0, "color": "black"})
-    fgj = folium.GeoJson(data=plot.geojson_background, style_function=lambda x: {"fillOpacity": 0.1, "color": "red"})
+    fgj = folium.GeoJson(data=plot, style_function=lambda x: {"fillOpacity": 0.1, "color": "red"})
     fgj.add_to(folium_map)
-    folium.Popup(plot.id).add_to(fgj)
+    folium.Popup(plot["features"][0]["properties"]["id"]).add_to(fgj)
 
 folium_map.save(f'index_{CLD_PRB_THRESH}_{date}.html')

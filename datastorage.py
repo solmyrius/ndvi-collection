@@ -1,4 +1,5 @@
 import csv
+from ee_config import DATA_FILE
 
 data_keys = [
     "id",
@@ -17,7 +18,7 @@ class DataStorage:
 
     def _load_csv(self):
         try:
-            f = open("arborise_data_2.csv", "r")
+            f = open(DATA_FILE, "r")
             csv_reader = csv.DictReader(f)
             line_count = 0
             for row in csv_reader:
@@ -39,7 +40,7 @@ class DataStorage:
         self._data[row_id][key] = value
 
     def write_csv(self):
-        f = open("arborise_data.csv", "w")
+        f = open(DATA_FILE, "w")
         f.write(",".join(data_keys) + "\n")
 
         for row_id in self._data:

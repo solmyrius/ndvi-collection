@@ -1,5 +1,8 @@
 import ee
+from ee_config import ee_auth
 from kml.kmldata import KMLData
+
+ee_auth()
 
 
 def data_collection(
