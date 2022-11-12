@@ -90,6 +90,12 @@ class DataGetter:
                     ds_key,
                     ft["properties"]["NDVI"]
                 )
+                DS.put_ndvi_value(
+                    ft["properties"]["id"],
+                    str(date),
+                    "id_parcel",
+                    ft["properties"]["id_parcel"]
+                )
 
     def extract_clouds(self, fc, ds_key):
 
@@ -129,6 +135,12 @@ class DataGetter:
                     str(date),
                     ds_key,
                     ft["properties"]["probability"]
+                )
+                DS.put_ndvi_value(
+                    ft["properties"]["id"],
+                    str(date),
+                    "id_parcel",
+                    ft["properties"]["id_parcel"]
                 )
 
     @staticmethod

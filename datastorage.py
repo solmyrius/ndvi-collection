@@ -3,6 +3,7 @@ from ee_config import DATA_FILE
 
 data_keys = [
     "id",
+    "id_parcel",
     "date",
     "polygon_NDVI",
     "polygon_max_clouds",

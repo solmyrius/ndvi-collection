@@ -1,3 +1,5 @@
+import re
+
 from pykml import parser
 from ee_config import SOURCE_KML_FILE
 
@@ -16,20 +18,28 @@ class KMLSource:
 		pms = self.doc.xpath(".//kml:Placemark[@id]", namespaces=namespace)
 		for p in pms:
 			plot_id = str(p.attrib["id"])
+			prop = {}
+			desc = str(p.description)
+			mt = re.findall(r"<td>IdParcel</td>\W*<td>([\w-]+)</td>", desc)
+			if mt:
+				prop["id_parcel"] = mt[0]
+
 			if p.MultiGeometry is not None:
 				for poly in p.MultiGeometry.Polygon:
 					self._register_polygon(
 						plot_id,
-						str(poly.outerBoundaryIs.LinearRing.coordinates)
+						str(poly.outerBoundaryIs.LinearRing.coordinates),
+						prop
 					)
 			else:
 				self._register_polygon(
 					plot_id,
-					str(p.Polygon.outerBoundaryIs.LinearRing.coordinates)
+					str(p.Polygon.outerBoundaryIs.LinearRing.coordinates),
+					prop
 				)
 
-	def _register_polygon(self, plot_id, coord_row):
-		self.plots.append(KMLPlotSource(plot_id, coord_row))
+	def _register_polygon(self, plot_id, coord_row, properties={}):
+		self.plots.append(KMLPlotSource(plot_id, coord_row, properties))
 
 	def fetch_one(self, i):
 		return self.plots[i]
@@ -84,7 +94,7 @@ class KMLSource:
 
 
 class KMLPlotSource:
-	def __init__(self, plot_id, coord_row):
+	def __init__(self, plot_id, coord_row, properties={}):
 		self.id = plot_id
 		self._coords = []
 		coord_pairs = coord_row.split()
@@ -93,6 +103,8 @@ class KMLPlotSource:
 			self._coords.append([float(lng), float(lat)])
 		self._georing = GeoRing(self._coords)
 		self._bg_georing = None
+		self.properties = properties
+		self.properties["id"] = plot_id
 
 	@property
 	def ring(self):
@@ -147,10 +159,6 @@ class KMLPlotSource:
 		lng = (min(lngs) + max(lngs)) / 2
 		lat = (min(lats) + max(lats)) / 2
 		return[lng, lat]
-
-	@property
-	def properties(self):
-		return {"id": self.id}
 
 	@property
 	def geojson(self):
