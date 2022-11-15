@@ -33,6 +33,7 @@ Settings for data retrieval mau be changed editing ee_config.py
 - DATE_START - date from which to start data polling
 - DATE_END - date when end data polling
 - CLD_PRB_THRESH - clouds probability threshold (used for maps only)
+- SQUARE_SIDE - plot background are squares with the side provided with this setting. Measured in coordinate degrees 0.01 deg ~= 1 km
 
 To start data retrieval process type:
 
