@@ -15,9 +15,10 @@ Data source and output settings
 """
 SOURCE_KML_FILE = "data/parcelle.kml"
 DATA_FILE = "arborise_data.csv"
-DATE_START = "2022-01-01"
-DATE_END = "2022-01-11"
-CLD_PRB_THRESH = 100  # Used for maps drawings only
+DATE_START = "2021-01-01"
+DATE_END = "2022-11-15"
+CLD_PRB_THRESH = 30  # Used for maps drawings only
+SQUARE_SIDE = 0.02  # Side of background square in degrees
 
 
 def ee_auth():

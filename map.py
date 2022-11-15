@@ -52,12 +52,13 @@ folium_map = folium.Map(
 folium_map.add_ee_layer(image, vis_params_ndvi, 'false color composite')
 folium_map.add_ee_layer(clouds, {'palette': 'e056fd'}, 'clouds')
 
-plots = kml.get_json_background_v2()
+# plots = kml.get_json_background_v2()
+plots = kml.get_json()
 
 for plot in plots:
-    # fgj = folium.GeoJson(data=plot.geojson, style_function=lambda x: {"fillOpacity":0, "color": "black"})
-    fgj = folium.GeoJson(data=plot, style_function=lambda x: {"fillOpacity": 0.1, "color": "red"})
+    fgj = folium.GeoJson(data=plot, style_function=lambda x: {"fillOpacity":0, "color": "black"})
+    # fgj = folium.GeoJson(data=plot, style_function=lambda x: {"fillOpacity": 0.1, "color": "red"})
     fgj.add_to(folium_map)
-    folium.Popup(plot["features"][0]["properties"]["id"]).add_to(fgj)
+    folium.Popup(plot["features"][0]["properties"]["id_parcel"]).add_to(fgj)
 
 folium_map.save(f'index_{CLD_PRB_THRESH}_{date}.html')

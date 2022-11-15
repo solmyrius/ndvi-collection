@@ -1,7 +1,7 @@
 import re
 
 from pykml import parser
-from ee_config import SOURCE_KML_FILE
+from ee_config import SOURCE_KML_FILE, SQUARE_SIDE
 
 
 class KMLSource:
@@ -121,7 +121,7 @@ class KMLPlotSource:
 	@property
 	def bg_georing(self):
 		if self._bg_georing is None:
-			w = 0.005
+			w = SQUARE_SIDE
 			c = self.centroid
 			self._bg_georing = GeoRing(
 				[
